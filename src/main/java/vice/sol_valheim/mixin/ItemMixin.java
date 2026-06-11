@@ -8,6 +8,7 @@ import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,8 +35,13 @@ public class ItemMixin
                 return;
             }
 
+            // Coop with thirst mods: never block the act of drinking. The drink slot only governs
+            // the *heart* bonus (recorded in CommonEvents when canEat), so a full/locked drink slot
+            // must not stop a drink from being consumed and restoring thirst.
+            var isDrink = itemStack.getUseAnimation() == UseAnim.DRINK;
+
             var canEat = ((PlayerEntityMixinDataAccessor) player).sol_valheim$getFoodData().canEat(item);
-            if (canEat || food.canAlwaysEat()) {
+            if (canEat || food.canAlwaysEat() || isDrink) {
                 player.startUsingItem(usedHand);
 
                 info.setReturnValue(InteractionResultHolder.consume(itemStack));

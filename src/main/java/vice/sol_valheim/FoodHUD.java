@@ -32,11 +32,16 @@ public class FoodHUD
 
         boolean useLargeIcons = SOLValheim.Config.client.useLargeIcons;
 
-        int width = client.getWindow().getGuiScaledWidth() / 2 + 91;
-        int height = client.getWindow().getGuiScaledHeight() - 39 - (useLargeIcons ? 6 : 0);
-
         int offset = 1;
         int size = useLargeIcons ? 14 : 9;
+
+        // ThirstWasTaken paints its thirst droplets in the same right-hand stats row we draw in,
+        // so lift our slot row by one box-height + gap when it's present to avoid overlapping it.
+        boolean thirstLoaded = ModList.get().isLoaded("thirst");
+
+        int width = client.getWindow().getGuiScaledWidth() / 2 + 91;
+        int height = client.getWindow().getGuiScaledHeight() - 39 - (useLargeIcons ? 6 : 0)
+                - (thirstLoaded ? size + 4 : 0);
 
         for (var food : foodData.ItemEntries) {
             renderFoodSlot(graphics, food, width, size, offset, height, useLargeIcons);

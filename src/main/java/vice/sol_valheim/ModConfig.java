@@ -103,7 +103,11 @@ public class ModConfig {
             existing = new Common.FoodConfig();
             existing.nutrition = food.nutrition();
             existing.healthRegenModifier = 1f;
-            existing.saturationModifier = food.saturation();
+            // 1.21's FoodProperties.saturation() returns the *absolute* saturation
+            // (nutrition * modifier * 2), whereas getTime() expects the original ~0.3-1.0
+            // saturation *modifier* (as 1.20.1's getSaturationModifier() returned). Recover the
+            // modifier so food durations stay in Valheim's minutes range instead of inflating ~20x.
+            existing.saturationModifier = food.saturation() / (2f * Math.max(1, food.nutrition()));
 
             if (key.startsWith("farmers"))
             {
@@ -146,8 +150,8 @@ public class ModConfig {
         // Number of food slots (range 2-5, default 3)
         public int maxSlots = 3;
 
-        // Percentage remaining before you can eat again
-        public float eatAgainPercentage = 0.2F;
+        // Percentage remaining before you can eat again (Valheim refreshes at half-digested)
+        public float eatAgainPercentage = 0.5F;
 
         // Boost given to other foods when drinking
         public float drinkSlotFoodEffectivenessBonus = 0.10F;
