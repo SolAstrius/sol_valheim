@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "vice.sol_valheim.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "CakeBlockMixin",
+    "ItemMixin",
+    "LivingEntityDamageAccessor",
+    "PlayerEntityMixin",
+    "ServerLevelMixin"
+  ],
+  "client": [
+    "LocalPlayerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,37 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "GPL-3.0-or-later"
+issueTrackerURL = "https://github.com/SolAstrius/sol_valheim/issues"
+
+[[mods]]
+modId = "sol_valheim"
+version = "${version}"
+displayName = "SOL: Valheim"
+description = '''
+A Valheim-style food system: eat a variety of foods to raise your max health and health regen, with timed food slots shown on the HUD. NeoForge 1.21.1 port of txni's SOL: Valheim.
+'''
+authors = "txni (original), Sol (NeoForge 1.21.1 port)"
+
+[[mixins]]
+config = "sol_valheim.mixins.json"
+
+[[dependencies.sol_valheim]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.sol_valheim]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.22)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.sol_valheim]]
+modId = "farmersdelight"
+type = "optional"
+versionRange = "[0,)"
+ordering = "NONE"
+side = "BOTH"
