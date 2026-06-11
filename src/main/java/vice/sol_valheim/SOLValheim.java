@@ -3,7 +3,7 @@ package vice.sol_valheim;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.EntityDataSerializer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
@@ -12,6 +12,8 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.List;
 
@@ -19,6 +21,12 @@ import java.util.List;
 public class SOLValheim
 {
     public static final String MOD_ID = "sol_valheim";
+
+    private static final DeferredRegister<EntityDataSerializer<?>> ENTITY_DATA_SERIALIZERS =
+            DeferredRegister.create(NeoForgeRegistries.Keys.ENTITY_DATA_SERIALIZERS, MOD_ID);
+    static {
+        ENTITY_DATA_SERIALIZERS.register("food_data", () -> ValheimFoodData.FOOD_DATA_SERIALIZER);
+    }
 
     public static final ResourceLocation SPEED_BUFF_ID = ResourceLocation.fromNamespaceAndPath(MOD_ID, "speed_buff");
 
@@ -34,7 +42,7 @@ public class SOLValheim
 
     public SOLValheim(IEventBus modEventBus)
     {
-        EntityDataSerializers.registerSerializer(ValheimFoodData.FOOD_DATA_SERIALIZER);
+        ENTITY_DATA_SERIALIZERS.register(modEventBus);
         init();
     }
 
