@@ -36,7 +36,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
     }
 
     @Unique
-    private ValheimFoodData sol_valheim$food_data = new ValheimFoodData();
+    private ValheimFoodData sol_valheim$food_data;
 
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, Level level) { super(entityType, level); }
 
