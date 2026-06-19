@@ -25,7 +25,7 @@ public class SOLValheimClient
 
     private void registerLayers(RegisterGuiLayersEvent event)
     {
-        event.registerAbove(VanillaGuiLayers.FOOD_LEVEL, FOOD_HUD_LAYER, FoodHUD::render);
+        event.registerAbove(VanillaGuiLayers.AIR_LEVEL, FOOD_HUD_LAYER, FoodHUD::render);
     }
 
     // Hide the vanilla food/hunger bar; the valheim food slots replace it.

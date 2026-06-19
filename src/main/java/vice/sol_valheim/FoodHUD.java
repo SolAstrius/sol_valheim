@@ -15,9 +15,10 @@ import vice.sol_valheim.accessors.PlayerEntityMixinDataAccessor;
 // above the vanilla food bar. Ported from the architectury ClientGuiEvent.RenderHud version.
 public class FoodHUD
 {
+    static Minecraft client = Minecraft.getInstance();
+
     public static void render(GuiGraphics graphics, DeltaTracker delta)
     {
-        var client = Minecraft.getInstance();
         if (client.player == null)
             return;
 
@@ -35,13 +36,8 @@ public class FoodHUD
         int offset = 1;
         int size = useLargeIcons ? 14 : 9;
 
-        // ThirstWasTaken paints its thirst droplets in the same right-hand stats row we draw in,
-        // so lift our slot row by one box-height + gap when it's present to avoid overlapping it.
-        boolean thirstLoaded = ModList.get().isLoaded("thirst");
-
         int width = client.getWindow().getGuiScaledWidth() / 2 + 91;
-        int height = client.getWindow().getGuiScaledHeight() - 39 - (useLargeIcons ? 6 : 0)
-                - (thirstLoaded ? size + 4 : 0);
+        int height = client.getWindow().getGuiScaledHeight() - client.gui.rightHeight - (useLargeIcons ? 6 : 0);
 
         for (var food : foodData.ItemEntries) {
             renderFoodSlot(graphics, food, width, size, offset, height, useLargeIcons);
