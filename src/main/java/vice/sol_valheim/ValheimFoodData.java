@@ -28,7 +28,6 @@ public class ValheimFoodData {
 
     public List<EatenFoodItem> ItemEntries = new ArrayList<>();
     public EatenFoodItem DrinkSlot;
-    public int MaxItemSlots = SOLValheim.CONFIG.common.maxSlots;
 
     public void eatItem(Item food) {
         if (food == Items.ROTTEN_FLESH)
@@ -62,7 +61,7 @@ public class ValheimFoodData {
             return;
         }
 
-        if (ItemEntries.size() < MaxItemSlots) {
+        if (ItemEntries.size() < SOLValheim.CONFIG.common.maxSlots) {
             ItemEntries.add(new EatenFoodItem(food, config.getTime()));
             ItemEntries.sort(Comparator.comparingInt(a -> a.ticksLeft));
             return;
@@ -89,7 +88,7 @@ public class ValheimFoodData {
         if (existing != null)
             return existing.canEatEarly();
 
-        if (ItemEntries.size() < MaxItemSlots)
+        if (ItemEntries.size() < SOLValheim.CONFIG.common.maxSlots)
             return true;
 
         return ItemEntries.stream().anyMatch(EatenFoodItem::canEatEarly);
@@ -179,7 +178,6 @@ public class ValheimFoodData {
 
     public CompoundTag save(CompoundTag tag) {
         int count = 0;
-        tag.putInt("max_slots", MaxItemSlots);
         tag.putInt("count", ItemEntries.size());
         for (var item : ItemEntries) {
             tag.putString("id" + count, BuiltInRegistries.ITEM.getKey(item.item).toString());
@@ -197,7 +195,6 @@ public class ValheimFoodData {
 
     public static ValheimFoodData read(CompoundTag tag) {
         var instance = new ValheimFoodData();
-        instance.MaxItemSlots = tag.getInt("max_slots");
 
         var size = tag.getInt("count");
         for (int count = 0; count < size; count++) {
@@ -220,7 +217,6 @@ public class ValheimFoodData {
     }
 
     public void loadFrom(ValheimFoodData that) {
-        this.MaxItemSlots = that.MaxItemSlots;
         this.DrinkSlot = that.DrinkSlot;
         this.ItemEntries = that.ItemEntries.stream()
             .map(ValheimFoodData.EatenFoodItem::new)

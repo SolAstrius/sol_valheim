@@ -6,3 +6,4 @@
 - don't render food overlay in creative/spectator
 - preserve food when passing through the end portal
 - various optimizations
+- fix adding the mod to existing worlds/changing `maxSlots` in the config
