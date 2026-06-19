@@ -28,7 +28,7 @@ public class ValheimFoodData {
 
     public List<EatenFoodItem> ItemEntries = new ArrayList<>();
     public EatenFoodItem DrinkSlot;
-    public int MaxItemSlots = SOLValheim.Config.common.maxSlots;
+    public int MaxItemSlots = SOLValheim.CONFIG.common.maxSlots;
 
     public void eatItem(Item food) {
         if (food == Items.ROTTEN_FLESH)
@@ -147,7 +147,7 @@ public class ValheimFoodData {
                 nutrition += food.getHearts();
             }
 
-            nutrition = nutrition * (1.0f + SOLValheim.Config.common.drinkSlotFoodEffectivenessBonus);
+            nutrition = nutrition * (1.0f + SOLValheim.CONFIG.common.drinkSlotFoodEffectivenessBonus);
         }
 
         return nutrition;
@@ -170,7 +170,7 @@ public class ValheimFoodData {
                 regen += food.getHealthRegen();
             }
 
-            regen = regen * (1.0f + SOLValheim.Config.common.drinkSlotFoodEffectivenessBonus);
+            regen = regen * (1.0f + SOLValheim.CONFIG.common.drinkSlotFoodEffectivenessBonus);
         }
 
         return regen;
@@ -239,7 +239,7 @@ public class ValheimFoodData {
             if (config == null)
                 return false;
 
-            return ((float) this.ticksLeft / config.getTime()) < SOLValheim.Config.common.eatAgainPercentage;
+            return ((float) this.ticksLeft / config.getTime()) < SOLValheim.CONFIG.common.eatAgainPercentage;
         }
 
         public EatenFoodItem(Item item, int ticksLeft) {

@@ -16,7 +16,7 @@ public class ServerLevelMixin
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setDayTime(J)V"), method = "tick")
     public void onSleep(BooleanSupplier hasTimeLeft, CallbackInfo ci)
     {
-        if (!SOLValheim.Config.common.passTicksDuringNight)
+        if (!SOLValheim.CONFIG.common.passTicksDuringNight)
             return;
 
         var level = (ServerLevel) (Object) this;

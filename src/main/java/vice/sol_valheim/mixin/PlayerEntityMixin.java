@@ -67,7 +67,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
         }
 
         var timeSinceHurt = level.getGameTime() - ((LivingEntityDamageAccessor) this).getLastDamageStamp();
-        if (timeSinceHurt > SOLValheim.Config.common.regenDelay && player.tickCount % (5 * SOLValheim.Config.common.regenSpeedModifier) == 0) {
+        if (timeSinceHurt > SOLValheim.CONFIG.common.regenDelay && player.tickCount % (5 * SOLValheim.CONFIG.common.regenSpeedModifier) == 0) {
             player.heal(sol_valheim$food_data.getRegenSpeed() / 20f);
         }
     }
@@ -110,10 +110,10 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
     @Unique
     public void sol_valheim$syncFoodData() {
         Player player = (Player) (LivingEntity) this;
-        float maxHP = Math.min(40, (SOLValheim.Config.common.startingHealth * 2) + sol_valheim$food_data.getTotalFoodNutrition());
+        float maxHP = Math.min(40, (SOLValheim.CONFIG.common.startingHealth * 2) + sol_valheim$food_data.getTotalFoodNutrition());
 
         player.getAttribute(Attributes.MAX_HEALTH).setBaseValue(maxHP);
-        if (SOLValheim.Config.common.speedBoost > 0.01f) {
+        if (SOLValheim.CONFIG.common.speedBoost > 0.01f) {
             var attr = player.getAttribute(Attributes.MOVEMENT_SPEED);
             var speedBuff = attr.getModifier(SOLValheim.SPEED_BUFF_ID);
             if (maxHP >= 20 && speedBuff == null)

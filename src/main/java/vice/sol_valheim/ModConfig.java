@@ -1,7 +1,10 @@
 package vice.sol_valheim;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import me.shedaniel.autoconfig.ConfigData;
+import me.shedaniel.autoconfig.annotation.Config;
+import me.shedaniel.autoconfig.annotation.ConfigEntry;
+import me.shedaniel.autoconfig.serializer.PartitioningSerializer;
+import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -11,61 +14,23 @@ import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.UseAnim;
-import net.neoforged.fml.loading.FMLPaths;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// Ported from the original Cloth/AutoConfig + Jankson setup to a plain Gson JSON config.
-// Keeps the original behaviour: foodConfigs is auto-generated from the item registry on first
-// launch (when empty) and persisted, so it can be hand-tuned afterwards.
-public class ModConfig {
+@Config(name = SOLValheim.MOD_ID)
+@Config.Gui.Background("minecraft:textures/block/stone.png")
+public class ModConfig extends PartitioningSerializer.GlobalData {
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-
+    @ConfigEntry.Category("common")
+    @ConfigEntry.Gui.TransitiveObject()
     public Common common = new Common();
+
+    @ConfigEntry.Category("client")
+    @ConfigEntry.Gui.TransitiveObject()
     public Client client = new Client();
-
-    private static Path configPath() {
-        return FMLPaths.CONFIGDIR.get().resolve(SOLValheim.MOD_ID + ".json");
-    }
-
-    public static ModConfig load() {
-        Path path = configPath();
-        if (Files.exists(path)) {
-            try (Reader reader = Files.newBufferedReader(path)) {
-                ModConfig cfg = GSON.fromJson(reader, ModConfig.class);
-                if (cfg != null) {
-                    if (cfg.common == null) cfg.common = new Common();
-                    if (cfg.client == null) cfg.client = new Client();
-                    if (cfg.common.foodConfigs == null) cfg.common.foodConfigs = new LinkedHashMap<>();
-                    return cfg;
-                }
-            } catch (Exception e) {
-                System.out.println("[sol_valheim] Failed to read config, using defaults: " + e);
-            }
-        }
-        return new ModConfig();
-    }
-
-    public void save() {
-        Path path = configPath();
-        try {
-            Files.createDirectories(path.getParent());
-            try (Writer writer = Files.newBufferedWriter(path)) {
-                GSON.toJson(this, writer);
-            }
-        } catch (IOException e) {
-            System.out.println("[sol_valheim] Failed to save config: " + e);
-        }
-    }
 
     // synchronized: the food map is lazily populated and read from both the server thread and the
     // client render thread (HUD). The original used a synchronized Hashtable; this preserves that.
@@ -78,21 +43,18 @@ public class ModConfig {
 
         var key = BuiltInRegistries.ITEM.getKey(item).toString();
 
-        var existing = SOLValheim.Config.common.foodConfigs.get(key);
-        if (existing == null)
-        {
+        var existing = SOLValheim.CONFIG.common.foodConfigs.get(key);
+        if (existing == null) {
             FoodProperties food = item == Items.CAKE
-                    ? new FoodProperties.Builder().nutrition(10).saturationModifier(0.7f).build()
-                    : stack.get(DataComponents.FOOD);
+                ? new FoodProperties.Builder().nutrition(10).saturationModifier(0.7f).build()
+                : stack.get(DataComponents.FOOD);
 
             if (isDrink) {
                 if (key.contains("potion")) {
                     food = new FoodProperties.Builder().nutrition(4).saturationModifier(0.75f).build();
-                }
-                else if (key.contains("milk")) {
+                } else if (key.contains("milk")) {
                     food = new FoodProperties.Builder().nutrition(6).saturationModifier(1f).build();
-                }
-                else {
+                } else {
                     food = new FoodProperties.Builder().nutrition(2).saturationModifier(0.5f).build();
                 }
             }
@@ -109,8 +71,7 @@ public class ModConfig {
             // modifier so food durations stay in Valheim's minutes range instead of inflating ~20x.
             existing.saturationModifier = food.saturation() / (2f * Math.max(1, food.nutrition()));
 
-            if (key.startsWith("farmers"))
-            {
+            if (key.startsWith("farmers")) {
                 existing.nutrition = (int) ((existing.nutrition * 1.25));
                 existing.saturationModifier = existing.saturationModifier * 1.10f;
                 existing.healthRegenModifier = 1.25f;
@@ -121,55 +82,73 @@ public class ModConfig {
                 existing.healthRegenModifier = 1.5f;
             }
 
-            SOLValheim.Config.common.foodConfigs.put(key, existing);
+            SOLValheim.CONFIG.common.foodConfigs.put(key, existing);
         }
 
         return existing;
     }
 
-    public static final class Common {
+    @Config(name = "common")
+    public static final class Common implements ConfigData {
 
-        // Default time in seconds that food should last per saturation level
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Default time in seconds that food should last per saturation level")
         public int defaultTimer = 180;
 
-        // Speed at which regeneration should occur
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Speed at which regeneration should occur")
         public float regenSpeedModifier = 1f;
 
-        // Time in ticks that regeneration should wait after taking damage
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Time in ticks that regeneration should wait after taking damage")
         public int regenDelay = 20 * 10;
 
-        // Time in seconds after spawning before sprinting is disabled
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Time in seconds after spawning before sprinting is disabled")
         public int respawnGracePeriod = 60 * 5;
 
-        // Extra speed given when your hearts are full (0 to disable)
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Extra speed given when your hearts are full (0 to disable)")
         public float speedBoost = 0.20f;
 
-        // Number of hearts to start with
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Number of hearts to start with")
         public int startingHealth = 3;
 
-        // Number of food slots (range 2-5, default 3)
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Number of food slots (range 2-5, default 3)")
         public int maxSlots = 3;
 
-        // Percentage remaining before you can eat again (Valheim refreshes at half-digested)
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Percentage remaining before you can eat again (Valheim refreshes at half-digested)")
         public float eatAgainPercentage = 0.5F;
 
-        // Boost given to other foods when drinking
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Boost given to other foods when drinking")
         public float drinkSlotFoodEffectivenessBonus = 0.10F;
 
-        // Simulate food ticking down during night
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Simulate food ticking down during night")
         public boolean passTicksDuringNight = true;
 
-        // Food nutrition and effect overrides (auto-generated if empty)
+        @ConfigEntry.Gui.Tooltip(count = 5)
+        @Comment("""
+                Food nutrition and effect overrides (Auto Generated if Empty)
+                - nutrition: Affects Heart Gain & Health Regen
+                - saturationModifier: Affects Food Duration & Player Speed
+                - healthRegenModifier: Multiplies health regen speed
+                - extraEffects: Extra effects provided by eating the food. Format: { String ID, float duration, int amplifier }
+            """)
         public Map<String, FoodConfig> foodConfigs = new LinkedHashMap<>();
 
-        public static final class FoodConfig {
+        public static final class FoodConfig implements ConfigData {
             public int nutrition;
             public float saturationModifier = 1f;
             public float healthRegenModifier = 1f;
             public List<MobEffectConfig> extraEffects = new ArrayList<>();
 
             public int getTime() {
-                var time = (int) (SOLValheim.Config.common.defaultTimer * 20 * saturationModifier * nutrition);
+                var time = (int) (SOLValheim.CONFIG.common.defaultTimer * 20 * saturationModifier * nutrition);
                 return Math.max(time, 6000);
             }
 
@@ -177,20 +156,22 @@ public class ModConfig {
                 return Math.max(nutrition, 2);
             }
 
-            public float getHealthRegen()
-            {
+            public float getHealthRegen() {
                 return Mth.clamp(nutrition * 0.10f * healthRegenModifier, 0.25f, 2f);
             }
         }
 
-        public static final class MobEffectConfig {
-            // Mob Effect ID
+        public static final class MobEffectConfig implements ConfigData {
+            @ConfigEntry.Gui.Tooltip()
+            @Comment("Mob Effect ID")
             public String ID;
 
-            // Effect duration percentage (1f is the entire food duration)
+            @ConfigEntry.Gui.Tooltip()
+            @Comment("Effect duration percentage (1f is the entire food duration)")
             public float duration = 1f;
 
-            // Effect Level
+            @ConfigEntry.Gui.Tooltip()
+            @Comment("Effect Level")
             public int amplifier = 1;
 
             public MobEffect getEffect() {
@@ -201,8 +182,10 @@ public class ModConfig {
         }
     }
 
-    public static final class Client {
-        // Enlarge the currently eaten food icons
+    @Config(name = "client")
+    public static final class Client implements ConfigData {
+        @ConfigEntry.Gui.Tooltip
+        @Comment("Enlarge the currently eaten food icons")
         public boolean useLargeIcons = true;
     }
 }

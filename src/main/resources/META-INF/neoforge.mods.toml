@@ -30,6 +30,13 @@ ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.sol_valheim]]
+modId = "cloth_config"
+type = "required"
+versionRange = "[15.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.sol_valheim]]
 modId = "farmersdelight"
 type = "optional"
 versionRange = "[0,)"

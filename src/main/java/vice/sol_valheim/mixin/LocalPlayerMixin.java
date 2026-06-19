@@ -17,7 +17,7 @@ public class LocalPlayerMixin
         var solPlayer = (PlayerEntityMixinDataAccessor) this;
         var mayFly = ((LocalPlayer) (Object) this).getAbilities().mayfly;
 
-        if (mayFly || ((LocalPlayer) (Object) this).tickCount < SOLValheim.Config.common.respawnGracePeriod * 20)
+        if (mayFly || ((LocalPlayer) (Object) this).tickCount < SOLValheim.CONFIG.common.respawnGracePeriod * 20)
         {
             cir.setReturnValue(true);
             cir.cancel();

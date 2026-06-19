@@ -1,5 +1,8 @@
 package vice.sol_valheim;
 
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
+import me.shedaniel.autoconfig.serializer.PartitioningSerializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -30,12 +33,12 @@ public class SOLValheim
 
     public static final ResourceLocation SPEED_BUFF_ID = ResourceLocation.fromNamespaceAndPath(MOD_ID, "speed_buff");
 
-    public static ModConfig Config;
+    public static ModConfig CONFIG;
 
     private static AttributeModifier speedBuff;
     public static AttributeModifier getSpeedBuffModifier() {
         if (speedBuff == null)
-            speedBuff = new AttributeModifier(SPEED_BUFF_ID, Config.common.speedBoost, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+            speedBuff = new AttributeModifier(SPEED_BUFF_ID, CONFIG.common.speedBoost, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
         return speedBuff;
     }
@@ -44,16 +47,17 @@ public class SOLValheim
     {
         ENTITY_DATA_SERIALIZERS.register(modEventBus);
 
-        Config = ModConfig.load();
+        AutoConfig.register(ModConfig.class, PartitioningSerializer.wrap(JanksonConfigSerializer::new));
+        CONFIG = AutoConfig.getConfigHolder(ModConfig.class).getConfig();
 
-        if (Config.common.foodConfigs.isEmpty())
+        if (CONFIG.common.foodConfigs.isEmpty())
         {
             System.out.println("[sol_valheim] Generating default food configs, this might take a second.");
             long startTime = System.nanoTime();
 
             BuiltInRegistries.ITEM.forEach(ModConfig::getFoodConfig);
 
-            Config.save();
+            AutoConfig.getConfigHolder(ModConfig.class).save();
 
             long executionTime = (System.nanoTime() - startTime) / 1000000;
             System.out.println("[sol_valheim] Generating default food configs took " + executionTime + "ms.");

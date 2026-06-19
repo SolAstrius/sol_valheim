@@ -10,6 +10,16 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://maven.shedaniel.me/")
+        content {
+            includeGroup("me.shedaniel.cloth")
+        }
+    }
+}
+
+dependencies {
+    implementation("me.shedaniel.cloth:cloth-config-neoforge:15.0.140")
 }
 
 neoForge {
