@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,9 +21,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import vice.sol_valheim.SOLValheim;
 import vice.sol_valheim.ValheimFoodData;
 import vice.sol_valheim.accessors.PlayerEntityMixinDataAccessor;
-
-import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 @Mixin({Player.class})
 public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEntityMixinDataAccessor {
@@ -99,12 +97,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
             sol_valheim$food_data = new ValheimFoodData();
 
         var foodData = ValheimFoodData.read(nbt.getCompound("sol_food_data"));
-        sol_valheim$food_data.MaxItemSlots = foodData.MaxItemSlots;
-        sol_valheim$food_data.DrinkSlot = foodData.DrinkSlot;
-        sol_valheim$food_data.ItemEntries = foodData.ItemEntries.stream()
-            .map(ValheimFoodData.EatenFoodItem::new)
-            .collect(Collectors.toCollection(ArrayList::new));
-
+        sol_valheim$food_data.loadFrom(foodData);
         sol_valheim$syncFoodData();
     }
 
@@ -130,6 +123,13 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
         }
 
         this.entityData.set(sol_valheim$DATA_ACCESSOR, sol_valheim$food_data, true);
+    }
+
+    @Override
+    @Unique
+    public void sol_valheim$loadFrom(ServerPlayer oldPlayer) {
+        var oldAccessor = (PlayerEntityMixinDataAccessor) oldPlayer;
+        sol_valheim$food_data.loadFrom(oldAccessor.sol_valheim$getFoodData());
     }
 
     @Inject(at = {@At("TAIL")}, method = {"defineSynchedData(Lnet/minecraft/network/syncher/SynchedEntityData$Builder;)V"})

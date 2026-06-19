@@ -1,11 +1,12 @@
 package vice.sol_valheim;
 
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import vice.sol_valheim.accessors.PlayerEntityMixinDataAccessor;
 
 @EventBusSubscriber(modid = SOLValheim.MOD_ID)
@@ -38,12 +39,12 @@ public class CommonEvents {
     }
 
     @SubscribeEvent
-    public static void onPlayerDeath(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof Player player) || player.level().isClientSide())
-            return;
-
-        var accessor = (PlayerEntityMixinDataAccessor) player;
-        accessor.sol_valheim$getFoodData().clear();
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        var accessor = (PlayerEntityMixinDataAccessor) event.getEntity();
+        if (!event.isWasDeath()) {
+            var oldPlayer = (ServerPlayer) event.getOriginal();
+            accessor.sol_valheim$loadFrom(oldPlayer);
+        }
         accessor.sol_valheim$syncFoodData();
     }
 }
