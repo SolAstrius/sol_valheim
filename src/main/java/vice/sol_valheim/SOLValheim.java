@@ -43,10 +43,7 @@ public class SOLValheim
     public SOLValheim(IEventBus modEventBus)
     {
         ENTITY_DATA_SERIALIZERS.register(modEventBus);
-        init();
-    }
 
-    public static void init() {
         Config = ModConfig.load();
 
         if (Config.common.foodConfigs.isEmpty())

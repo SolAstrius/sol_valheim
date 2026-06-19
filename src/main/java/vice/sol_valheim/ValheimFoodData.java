@@ -68,6 +68,7 @@ public class ValheimFoodData
         if (ItemEntries.size() < MaxItemSlots)
         {
             ItemEntries.add(new EatenFoodItem(food, config.getTime()));
+            ItemEntries.sort(Comparator.comparingInt(a -> a.ticksLeft));
             return;
         }
 
@@ -77,6 +78,7 @@ public class ValheimFoodData
             {
                 item.ticksLeft = config.getTime();
                 item.item = food;
+                ItemEntries.sort(Comparator.comparingInt(a -> a.ticksLeft));
                 return;
             }
         }
@@ -115,21 +117,27 @@ public class ValheimFoodData
     }
 
 
-    public void tick()
+    public boolean tick()
     {
+        var shouldSync = false;
+
         for (var item : ItemEntries)
         {
             item.ticksLeft--;
         }
+        if (ItemEntries.removeIf(item -> item.ticksLeft <= 0)) {
+            shouldSync = true;
+        }
 
         if (DrinkSlot != null) {
             DrinkSlot.ticksLeft--;
-            if (DrinkSlot.ticksLeft <= 0)
+            if (DrinkSlot.ticksLeft <= 0) {
                 DrinkSlot = null;
+                shouldSync = true;
+            }
         }
 
-        ItemEntries.removeIf(item -> item.ticksLeft <= 0);
-        ItemEntries.sort(Comparator.comparingInt(a -> a.ticksLeft));
+        return shouldSync;
     }
 
 

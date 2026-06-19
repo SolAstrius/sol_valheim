@@ -1,5 +1,7 @@
 package vice.sol_valheim.mixin;
 
+import com.mojang.authlib.GameProfile;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -23,8 +25,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Mixin({Player.class})
-public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEntityMixinDataAccessor
-{
+public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEntityMixinDataAccessor {
     @Unique
     private static final EntityDataAccessor<ValheimFoodData> sol_valheim$DATA_ACCESSOR = SynchedEntityData.defineId(Player.class, ValheimFoodData.FOOD_DATA_SERIALIZER);
 
@@ -38,7 +39,9 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
     @Unique
     private ValheimFoodData sol_valheim$food_data;
 
-    protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, Level level) { super(entityType, level); }
+    protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, Level level) {
+        super(entityType, level);
+    }
 
     @Inject(at = {@At("HEAD")}, method = {"causeFoodExhaustion(F)V"}, cancellable = true)
     private void onAddExhaustion(float exhaustion, CallbackInfo info) {
@@ -53,40 +56,20 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
     @Unique
     private void sol_valheim$tick() {
         var level = this.level();
-
-        if (level.isClientSide)
+        if (level.isClientSide || isDeadOrDying())
             return;
-
-        if (isDeadOrDying()) {
-            sol_valheim$food_data.clear();
-            sol_valheim$trackData();
-            return;
-        }
-
-        if (!sol_valheim$food_data.ItemEntries.isEmpty()) {
-            sol_valheim$food_data.tick();
-            sol_valheim$trackData();
-        }
-
-        float maxhp = Math.min(40, (SOLValheim.Config.common.startingHealth * 2) + sol_valheim$food_data.getTotalFoodNutrition());
 
         Player player = (Player) (LivingEntity) this;
         player.getFoodData().setSaturation(0);
 
-        player.getAttribute(Attributes.MAX_HEALTH).setBaseValue(maxhp);
-
-        if (SOLValheim.Config.common.speedBoost > 0.01f) {
-            var attr = player.getAttribute(Attributes.MOVEMENT_SPEED);
-            var speedBuff = attr.getModifier(SOLValheim.SPEED_BUFF_ID);
-            if (maxhp >= 20 && speedBuff == null)
-                attr.addTransientModifier(SOLValheim.getSpeedBuffModifier());
-            else if (maxhp < 20 && speedBuff != null)
-                attr.removeModifier(SOLValheim.SPEED_BUFF_ID);
+        if (!sol_valheim$food_data.ItemEntries.isEmpty()) {
+            if (sol_valheim$food_data.tick() || player.tickCount % 20 == 0) {
+                sol_valheim$syncFoodData();
+            }
         }
 
         var timeSinceHurt = level.getGameTime() - ((LivingEntityDamageAccessor) this).getLastDamageStamp();
-        if (timeSinceHurt > SOLValheim.Config.common.regenDelay && player.tickCount % (5 * SOLValheim.Config.common.regenSpeedModifier) == 0)
-        {
+        if (timeSinceHurt > SOLValheim.Config.common.regenDelay && player.tickCount % (5 * SOLValheim.Config.common.regenSpeedModifier) == 0) {
             player.heal(sol_valheim$food_data.getRegenSpeed() / 20f);
         }
     }
@@ -119,20 +102,33 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
         sol_valheim$food_data.MaxItemSlots = foodData.MaxItemSlots;
         sol_valheim$food_data.DrinkSlot = foodData.DrinkSlot;
         sol_valheim$food_data.ItemEntries = foodData.ItemEntries.stream()
-                .map(ValheimFoodData.EatenFoodItem::new)
-                .collect(Collectors.toCollection(ArrayList::new));
+            .map(ValheimFoodData.EatenFoodItem::new)
+            .collect(Collectors.toCollection(ArrayList::new));
 
-        sol_valheim$trackData();
+        sol_valheim$syncFoodData();
+    }
+
+    @Inject(at = @At("TAIL"), method = "<init>")
+    private void init(Level level, BlockPos pos, float yRot, GameProfile gameProfile, CallbackInfo ci) {
+        sol_valheim$syncFoodData();
     }
 
     @Override
     @Unique
     public void sol_valheim$syncFoodData() {
-        sol_valheim$trackData();
-    }
+        Player player = (Player) (LivingEntity) this;
+        float maxHP = Math.min(40, (SOLValheim.Config.common.startingHealth * 2) + sol_valheim$food_data.getTotalFoodNutrition());
 
-    @Unique
-    private void sol_valheim$trackData() {
+        player.getAttribute(Attributes.MAX_HEALTH).setBaseValue(maxHP);
+        if (SOLValheim.Config.common.speedBoost > 0.01f) {
+            var attr = player.getAttribute(Attributes.MOVEMENT_SPEED);
+            var speedBuff = attr.getModifier(SOLValheim.SPEED_BUFF_ID);
+            if (maxHP >= 20 && speedBuff == null)
+                attr.addTransientModifier(SOLValheim.getSpeedBuffModifier());
+            else if (maxHP < 20 && speedBuff != null)
+                attr.removeModifier(SOLValheim.SPEED_BUFF_ID);
+        }
+
         this.entityData.set(sol_valheim$DATA_ACCESSOR, sol_valheim$food_data, true);
     }
 
