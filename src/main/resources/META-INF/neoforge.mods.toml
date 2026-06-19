@@ -1,16 +1,20 @@
 modLoader = "javafml"
 loaderVersion = "[4,)"
-license = "GPL-3.0-or-later"
-issueTrackerURL = "https://github.com/SolAstrius/sol_valheim/issues"
+license = "	LGPL-3.0-only"
+issueTrackerURL = "https://github.com/TeaGuild/sol_valheim/issues"
 
 [[mods]]
 modId = "sol_valheim"
 version = "${version}"
-displayName = "SOL: Valheim"
+displayName = "Spice of Life: Valheiminator"
+displayURL = "https://modrinth.com/project/sol-valheim"
+logoFile = "assets/sol_valheim/icon.png"
 description = '''
-A Valheim-style food system: eat a variety of foods to raise your max health and health regen, with timed food slots shown on the HUD. NeoForge 1.21.1 port of txni's SOL: Valheim.
+A Valheim-style food system: eat a variety of foods to raise your max health and health regen, with timed food slots shown on the HUD.
+
+NeoForge 1.21.1 port of txni's SOL: Valheim.
 '''
-authors = "txni (original), Sol (NeoForge 1.21.1 port)"
+authors = "txni, TeaGuild contributors"
 
 [[mixins]]
 config = "sol_valheim.mixins.json"
@@ -25,7 +29,7 @@ side = "BOTH"
 [[dependencies.sol_valheim]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.1,1.22)"
+versionRange = "[1.21.1]"
 ordering = "NONE"
 side = "BOTH"
 
