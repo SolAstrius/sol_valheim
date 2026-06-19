@@ -5,20 +5,16 @@ import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
 import me.shedaniel.autoconfig.serializer.PartitioningSerializer;
 import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.UseAnim;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Config(name = SOLValheim.MOD_ID)
 @Config.Gui.Background("minecraft:textures/block/stone.png")
@@ -32,60 +28,9 @@ public class ModConfig extends PartitioningSerializer.GlobalData {
     @ConfigEntry.Gui.TransitiveObject()
     public Client client = new Client();
 
-    // synchronized: the food map is lazily populated and read from both the server thread and the
-    // client render thread (HUD). The original used a synchronized Hashtable; this preserves that.
-    public static synchronized Common.FoodConfig getFoodConfig(Item item) {
-        var stack = item.getDefaultInstance();
-        var isDrink = stack.getUseAnimation() == UseAnim.DRINK;
-        var isEdible = stack.has(DataComponents.FOOD);
-        if (item != Items.CAKE && !isEdible && !isDrink)
-            return null;
-
-        var key = BuiltInRegistries.ITEM.getKey(item).toString();
-
-        var existing = SOLValheim.CONFIG.common.foodConfigs.get(key);
-        if (existing == null) {
-            FoodProperties food = item == Items.CAKE
-                ? new FoodProperties.Builder().nutrition(10).saturationModifier(0.7f).build()
-                : stack.get(DataComponents.FOOD);
-
-            if (isDrink) {
-                if (key.contains("potion")) {
-                    food = new FoodProperties.Builder().nutrition(4).saturationModifier(0.75f).build();
-                } else if (key.contains("milk")) {
-                    food = new FoodProperties.Builder().nutrition(6).saturationModifier(1f).build();
-                } else {
-                    food = new FoodProperties.Builder().nutrition(2).saturationModifier(0.5f).build();
-                }
-            }
-
-            if (food == null)
-                return null;
-
-            existing = new Common.FoodConfig();
-            existing.nutrition = food.nutrition();
-            existing.healthRegenModifier = 1f;
-            // 1.21's FoodProperties.saturation() returns the *absolute* saturation
-            // (nutrition * modifier * 2), whereas getTime() expects the original ~0.3-1.0
-            // saturation *modifier* (as 1.20.1's getSaturationModifier() returned). Recover the
-            // modifier so food durations stay in Valheim's minutes range instead of inflating ~20x.
-            existing.saturationModifier = food.saturation() / (2f * Math.max(1, food.nutrition()));
-
-            if (key.startsWith("farmers")) {
-                existing.nutrition = (int) ((existing.nutrition * 1.25));
-                existing.saturationModifier = existing.saturationModifier * 1.10f;
-                existing.healthRegenModifier = 1.25f;
-            }
-
-            if (key.equals("minecraft:golden_apple") || key.equals("minecraft:enchanted_golden_apple")) {
-                existing.nutrition = 10;
-                existing.healthRegenModifier = 1.5f;
-            }
-
-            SOLValheim.CONFIG.common.foodConfigs.put(key, existing);
-        }
-
-        return existing;
+    public static Common.FoodConfig getFoodConfig(Item item) {
+        var key = BuiltInRegistries.ITEM.getKey(item);
+        return SOLValheim.CONFIG.common.foodConfigs.get(key);
     }
 
     @Config(name = "common")
@@ -139,7 +84,7 @@ public class ModConfig extends PartitioningSerializer.GlobalData {
                 - healthRegenModifier: Multiplies health regen speed
                 - extraEffects: Extra effects provided by eating the food. Format: { String ID, float duration, int amplifier }
             """)
-        public Map<String, FoodConfig> foodConfigs = new LinkedHashMap<>();
+        public Map<ResourceLocation, FoodConfig> foodConfigs = new ConcurrentHashMap<>();
 
         public static final class FoodConfig implements ConfigData {
             public int nutrition;
